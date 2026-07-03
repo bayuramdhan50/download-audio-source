@@ -184,6 +184,6 @@ function standaloneAudioPlugin(): Plugin {
 }
 
 export default defineConfig({
-  base: './',
+  base: '/download-audio-source/',
   plugins: [react(), standaloneAudioPlugin()],
 });
