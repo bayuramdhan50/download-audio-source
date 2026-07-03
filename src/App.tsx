@@ -53,16 +53,39 @@ export function App() {
     try {
       const res = await extractAudioUrl(url, platform);
       if (res.success && res.downloadUrl) {
-        setNotice('⏳ Mengalihkan pengunduhan ke file manager perangkat...');
+        setNotice('⏳ Memulai pengunduhan audio...');
+        const fileName = res.title ? `${res.title}.mp3` : `${platform.toLowerCase()}-audio-${Date.now()}.mp3`;
+
+        // 1. Coba unduh sebagai Blob jika CORS mengizinkan, agar langsung tersimpan di folder Unduhan dengan nama akurat
+        try {
+          const blobRes = await fetch(res.downloadUrl);
+          if (blobRes.ok) {
+            const blob = await blobRes.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.setAttribute('download', fileName);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+            setNotice('✓ Pengunduhan selesai! Periksa folder unduhan Anda.');
+            return;
+          }
+        } catch {
+          // Jika fetch blob terhalang CORS, lanjutkan ke metode pengalihan tautan unduh
+        }
+
+        // 2. Fallback untuk tautan cross-origin: buka di tab baru agar tidak menimpa atau keluar dari halaman aplikasi
         const a = document.createElement('a');
         a.href = res.downloadUrl;
-        const fileName = res.title ? `${res.title}.mp3` : `${platform.toLowerCase()}-audio-${Date.now()}.mp3`;
         a.setAttribute('download', fileName);
-        a.setAttribute('target', '_self');
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setNotice('✓ Pengunduhan dimulai! Periksa folder unduhan / file manager Anda.');
+        setNotice('✓ Pengunduhan dialihkan ke tab/jendela baru!');
       } else {
         setNotice('');
         setErrorNotice(res.error || 'Gagal mengunduh audio. Pastikan tautan valid dan dapat diakses publik.');
