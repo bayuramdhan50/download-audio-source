@@ -184,5 +184,6 @@ function standaloneAudioPlugin(): Plugin {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [react(), standaloneAudioPlugin()],
 });
